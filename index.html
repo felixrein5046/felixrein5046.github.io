@@ -1,0 +1,415 @@
+<meta charset="utf-8">
+<title>Angelschein Trainer SH</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+/* Layout: eine Bildschirm-App mit fester Kopfzeile, scrollendem Inhalt und Tab-Leiste unten.
+   Farbwelt: Flusswasser (Petrol), Schilf (Grün), Kies (warmes Grau). */
+:root{
+  --bg:#eef3f1; --surface:#ffffff; --surface2:#e2ebe8; --fg:#13262a; --muted:#587074;
+  --accent:#1e6f7b; --accent-fg:#ffffff; --accent-soft:#d6ebee; --reed:#6a9a38;
+  --border:#cfdcd8; --ok:#2b8a4e; --ok-soft:#dcefe2; --bad:#c0392b; --bad-soft:#f6dcd8;
+  --shadow:0 1px 2px rgba(19,38,42,.06),0 6px 20px rgba(19,38,42,.06);
+  --display:"Outfit","Nunito Sans",system-ui,sans-serif; --body:"Nunito Sans",system-ui,-apple-system,sans-serif;
+  --nav-h:62px; --head-h:56px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1819; --surface:#172426; --surface2:#1f3033; --fg:#e6efee; --muted:#9db3b0;
+    --accent:#5cc0cc; --accent-fg:#06252a; --accent-soft:#163f45; --reed:#8fc35a;
+    --border:#2b3f42; --ok:#5ecb86; --ok-soft:#163d27; --bad:#f08a7d; --bad-soft:#4a2320;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1819; --surface:#172426; --surface2:#1f3033; --fg:#e6efee; --muted:#9db3b0;
+  --accent:#5cc0cc; --accent-fg:#06252a; --accent-soft:#163f45; --reed:#8fc35a;
+  --border:#2b3f42; --ok:#5ecb86; --ok-soft:#163d27; --bad:#f08a7d; --bad-soft:#4a2320;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.2}
+p{margin:0}
+.hidden{display:none!important}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;height:var(--head-h);display:flex;align-items:center;gap:10px;background:var(--surface);border-bottom:1px solid var(--border);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top h1{font-size:1.1rem;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back{border:0;background:transparent;padding:6px;margin-left:-6px;border-radius:8px;display:flex;color:var(--accent)}
+.back:hover{background:var(--accent-soft)}
+.logo{width:28px;height:28px;flex:none}
+.pill{font-size:.78rem;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--surface2);color:var(--muted);letter-spacing:.02em}
+.pill.warn{background:var(--bad-soft);color:var(--bad)}
+
+main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 24px);max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--surface);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));padding-bottom:env(safe-area-inset-bottom,0px);height:calc(var(--nav-h) + env(safe-area-inset-bottom,0px))}
+nav.tabs a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--muted);font-size:.72rem;font-weight:700;letter-spacing:.02em;border-radius:10px}
+nav.tabs a svg{width:24px;height:24px}
+nav.tabs a.active{color:var(--accent)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+.card.flat{box-shadow:none}
+.eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.stack{display:flex;flex-direction:column;gap:10px}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--border);background:var(--surface);border-radius:12px;padding:12px 16px;font-weight:700;text-decoration:none;color:var(--fg);min-height:46px}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.block{width:100%}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* Startseite */
+.hero{display:flex;gap:18px;align-items:center}
+.ring{position:relative;width:96px;height:96px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.catlist{display:grid;grid-template-columns:1fr;gap:10px}
+.catbtn{display:grid;grid-template-columns:6px 1fr auto;gap:14px;align-items:center;text-align:left;border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:14px 16px 14px 0;overflow:hidden;width:100%}
+.catbtn:hover{background:var(--surface2)}
+.catbtn .bar{align-self:stretch;border-radius:0 3px 3px 0}
+.catbtn b{font-family:var(--display);font-weight:600;font-size:1.02rem;display:block}
+.catbtn .prog{height:6px;background:var(--surface2);border-radius:3px;margin-top:8px;overflow:hidden}
+.catbtn .prog i{display:block;height:100%;background:var(--reed);border-radius:3px}
+.catbtn .num{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700;font-size:.9rem}
+
+/* Frage */
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.progress{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .25s}
+.question{font-size:1.2rem;font-weight:600;line-height:1.35}
+.qimg{display:block;width:100%;max-width:100%;height:auto;border-radius:12px;background:#fff;border:1px solid var(--border)}
+.review .qimg{max-width:240px;margin:6px 0}
+.src{font-size:.78rem;color:var(--muted);margin-top:6px}
+.answers{display:flex;flex-direction:column;gap:10px}
+.ans{display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:start;text-align:left;border:1.5px solid var(--border);background:var(--surface);border-radius:14px;padding:13px 14px;line-height:1.4;width:100%}
+.ans .letter{width:30px;height:30px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;font-family:var(--display)}
+.ans:hover{border-color:var(--accent)}
+.ans.selected{border-color:var(--accent);background:var(--accent-soft)}
+.ans.selected .letter{background:var(--accent);color:var(--accent-fg)}
+.ans.right{border-color:var(--ok);background:var(--ok-soft)}
+.ans.right .letter{background:var(--ok);color:#fff}
+.ans.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.ans.wrong .letter{background:var(--bad);color:#fff}
+.ans:disabled{cursor:default}
+.feedback{border-radius:14px;padding:14px 16px;border:1px solid var(--border);background:var(--surface2)}
+.feedback.ok{border-color:var(--ok);background:var(--ok-soft)}
+.feedback.bad{border-color:var(--bad);background:var(--bad-soft)}
+.feedback b{font-family:var(--display)}
+
+/* Prüfung */
+.timer{font-variant-numeric:tabular-nums;font-family:var(--display);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px}
+.grid button{aspect-ratio:1;border-radius:9px;border:1px solid var(--border);background:var(--surface);font-weight:700;font-size:.85rem;font-variant-numeric:tabular-nums;padding:0}
+.grid button.done{background:var(--accent-soft);border-color:var(--accent)}
+.grid button.cur{outline:2px solid var(--accent);outline-offset:1px}
+.grid button.ok{background:var(--ok-soft);border-color:var(--ok)}
+.grid button.ko{background:var(--bad-soft);border-color:var(--bad)}
+.verdict{text-align:center;padding:26px 18px}
+.verdict .big{font-family:var(--display);font-size:3rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.verdict.pass{background:var(--ok-soft);border-color:var(--ok)}
+.verdict.fail{background:var(--bad-soft);border-color:var(--bad)}
+.bars{display:flex;flex-direction:column;gap:10px}
+.barrow{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center}
+.barrow .track{grid-column:1/-1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.barrow .track i{display:block;height:100%;border-radius:4px}
+.barrow .n{font-variant-numeric:tabular-nums;font-weight:700}
+.review{border-top:1px solid var(--border);padding-top:12px;margin-top:4px}
+.review + .review{margin-top:12px}
+
+/* Fische */
+.fish{border:1px solid var(--border);border-radius:14px;background:var(--surface);overflow:hidden}
+.fish summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;font-weight:600;font-family:var(--display);font-size:1.02rem}
+.fish summary::-webkit-details-marker{display:none}
+.fish summary .lat{font-family:var(--body);font-style:italic;font-weight:400;color:var(--muted);font-size:.85rem}
+.fish dl{margin:0;padding:0 16px 16px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:.95rem}
+.fish dt{color:var(--muted);font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
+.fish dd{margin:0;min-width:0}
+.note{font-size:.88rem;color:var(--muted);border-left:3px solid var(--reed);padding-left:12px}
+
+/* Statistik */
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat .card{padding:14px;text-align:center}
+.stat .card .v{font-family:var(--display);font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .card .l{font-size:.78rem;color:var(--muted);font-weight:700}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.95rem}
+td,th{text-align:left;padding:8px 6px;border-bottom:1px solid var(--border)}
+th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+td.r,th.r{text-align:right}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+@media (min-width:560px){.catlist{grid-template-columns:1fr 1fr}}
+</style>
+
+<header class="top" id="top"></header>
+<main id="app" aria-live="polite"></main>
+<nav class="tabs" id="tabs">
+  <a href="#start" data-r="start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Start</a>
+  <a href="#lernen" data-r="lernen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h13"/><path d="M9 7h6"/></svg>Lernen</a>
+  <a href="#pruefung" data-r="pruefung"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="m8.5 13 2 2 4-4"/></svg>Prüfung</a>
+  <a href="#fische" data-r="fische"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 12s3.5-6 10-6c3.5 0 6 2.5 8 6-2 3.5-4.5 6-8 6-6.5 0-10-6-10-6z"/><path d="M13 6 11 2M13 18l-2 4M21 12l-4-3v6z"/><circle cx="8" cy="11" r="1" fill="currentColor"/></svg>Fische</a>
+  <a href="#statistik" data-r="statistik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20h16"/><path d="M6 16v-5M11 16V6M16 16v-8"/></svg>Statistik</a>
+</nav>
+
+<script src="fragen.js"></script>
+<script>
+(function(){
+"use strict";
+FRAGEN.forEach(function(q,i){q.id=i});
+// Prüfungsordnung Anglerverband Schleswig-Holstein (Okt. 2025): 60 Fragen aus 6 Sachgebieten, 90 Minuten, 45 gesamt, 6 je Gebiet
+var EXAM_N_PER_CAT=10, EXAM_MIN_TOTAL=45, EXAM_MIN_CAT=6, EXAM_MINUTES=90;
+function img(q){return q.bild?'<img class="qimg" src="bilder/'+q.bild+'.jpg" alt="Abbildung eines Fisches">':''}
+function srcNote(q){return '<div class="src">'+(q.sicher==='amtlich'?'Amtlicher Lösungsschlüssel (bundeseinheitlicher Katalog)':q.geprueft?'Vom Verband bestätigt':'Lösungsvorschlag, noch nicht vom Verband bestätigt')+' · Katalog-Nr. '+q.nr+'</div>'}
+
+var app=document.getElementById('app'), top=document.getElementById('top');
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function load(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function del(k){try{localStorage.removeItem(k)}catch(e){}}
+function pad(n){return (n<10?'0':'')+n}
+function fmtDate(t){var d=new Date(t);return pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear()}
+
+var stats=load('ap_stats',{});   // id -> {ok,bad,last}
+var exams=load('ap_exams',[]);   // Verlauf
+var exam=load('ap_exam',null);   // laufende Prüfung
+var learn=null;                  // laufende Lerneinheit (nur im Speicher)
+var timerId=null;
+
+function recordAnswer(id,correct){
+  var s=stats[id]||{ok:0,bad:0,last:null};
+  if(correct)s.ok++;else s.bad++;
+  s.last=correct?'ok':'bad';
+  stats[id]=s;save('ap_stats',stats);
+}
+function catQuestions(c){return FRAGEN.filter(function(q){return q.c===c})}
+function mastered(q){var s=stats[q.id];return !!(s&&s.last==='ok')}
+function catMastery(c){var qs=catQuestions(c);var m=qs.filter(mastered).length;return{m:m,n:qs.length,p:qs.length?m/qs.length:0}}
+function totalMastery(){var m=FRAGEN.filter(mastered).length;return{m:m,n:FRAGEN.length,p:m/FRAGEN.length}}
+
+function setHeader(title,back,extra){
+  top.innerHTML=(back?'<button class="back" aria-label="Zurück" id="backbtn"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>':
+    '<svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="var(--accent)"/><path d="M6 16s4.5-6 11-6c3.4 0 6 2.3 8 6-2 3.7-4.6 6-8 6-6.5 0-11-6-11-6z" fill="var(--accent-fg)"/><circle cx="11" cy="15" r="1.3" fill="var(--accent)"/><path d="M25 16l-4-3v6z" fill="var(--accent-fg)"/></svg>')
+    +'<h1>'+esc(title)+'</h1>'+(extra||'');
+  var b=document.getElementById('backbtn');if(b)b.onclick=back;
+}
+function setTab(r){Array.prototype.forEach.call(document.querySelectorAll('#tabs a'),function(a){a.classList.toggle('active',a.dataset.r===r)})}
+function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}}
+
+/* ─────────── Start ─────────── */
+function renderHome(){
+  setHeader('Angelschein Trainer');
+  var t=totalMastery(),pct=Math.round(t.p*100);
+  var r=40,circ=2*Math.PI*r;
+  var last=exams.length?exams[exams.length-1]:null;
+  var h='<section class="card"><div class="hero"><div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="'+r+'" fill="none" stroke="var(--surface2)" stroke-width="10"/><circle cx="50" cy="50" r="'+r+'" fill="none" stroke="var(--reed)" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+(circ*t.p).toFixed(1)+' '+circ.toFixed(1)+'"/></svg><div class="val">'+pct+'%</div></div>'
+    +'<div class="grow"><div class="eyebrow">Dein Lernstand</div><h2 style="font-size:1.3rem;margin-top:4px">'+(t.m===0?'Los geht’s!':t.m===t.n?'Alle Fragen sitzen':t.m+' von '+t.n+' Fragen sitzen')+'</h2>'
+    +'<p class="muted small" style="margin-top:4px">'+(exam&&!exam.done?'Du hast eine angefangene Prüfung.':last?'Letzte Prüfung: '+last.score+'/'+last.total+(last.passed?' – bestanden':' – nicht bestanden'):'Lerne nach Sachgebiet oder starte gleich eine Probeprüfung.')+'</p></div></div>'
+    +'<div class="row" style="margin-top:16px"><a class="btn primary grow" href="#lernen">Lernen</a><a class="btn grow" href="#pruefung">'+(exam&&!exam.done?'Prüfung fortsetzen':'Probeprüfung')+'</a></div></section>';
+  h+='<div class="eyebrow">Sachgebiete</div><div class="catlist">'+KATEGORIEN.map(function(k,i){var m=catMastery(i);return '<button class="catbtn" data-cat="'+i+'"><span class="bar" style="background:'+k.farbe+'"></span><span class="grow"><b>'+esc(k.name)+'</b><span class="prog"><i style="width:'+Math.round(m.p*100)+'%"></i></span></span><span class="num">'+m.m+'/'+m.n+'</span></button>'}).join('')+'</div>';
+  h+='<p class="note">Fragen aus dem amtlichen Katalog der Fischereischeinprüfung Schleswig-Holstein (bundeseinheitlicher Teil und Landesfragen). Seit Oktober 2025 ist vor der Prüfung ein Praxistag Pflicht. Verbindlich sind Landesfischereigesetz, Binnen- und Küstenfischereiverordnung Schleswig-Holstein.</p>';
+  app.innerHTML=h;
+  Array.prototype.forEach.call(app.querySelectorAll('.catbtn'),function(b){b.onclick=function(){startLearn(+b.dataset.cat,false);go('lernen')}});
+}
+
+/* ─────────── Lernen ─────────── */
+function renderLearnMenu(){
+  setHeader('Lernen');
+  var wrong=FRAGEN.filter(function(q){var s=stats[q.id];return s&&s.last==='bad'});
+  var h='<section class="card stack"><div><div class="eyebrow">Lernmodus</div><p class="small muted" style="margin-top:4px">Du siehst nach jeder Antwort sofort die Lösung mit Erklärung. Wähle ein Sachgebiet oder lerne alles gemischt.</p></div>'
+    +'<button class="btn primary block" id="allbtn">Alle Sachgebiete gemischt</button>'
+    +'<button class="btn block" id="wrongbtn" '+(wrong.length?'':'disabled')+'>Fehler wiederholen ('+wrong.length+')</button></section>';
+  h+='<div class="eyebrow">Nach Sachgebiet</div><div class="catlist">'+KATEGORIEN.map(function(k,i){var m=catMastery(i);return '<button class="catbtn" data-cat="'+i+'"><span class="bar" style="background:'+k.farbe+'"></span><span class="grow"><b>'+esc(k.name)+'</b><span class="prog"><i style="width:'+Math.round(m.p*100)+'%"></i></span></span><span class="num">'+m.m+'/'+m.n+'</span></button>'}).join('')+'</div>';
+  h+='<p class="note">Amtlicher Fragenkatalog ('+KATALOG_INFO.gesamt+' Fragen, Stand: '+esc(KATALOG_INFO.stand)+'). '+(KATALOG_INFO.geprueft<KATALOG_INFO.gesamt?KATALOG_INFO.geprueft+' von '+KATALOG_INFO.gesamt+' Lösungen sind amtlich belegt oder vom Verband bestätigt, die übrigen sind fachliche Vorschläge und werden noch geprüft.':'Alle Lösungen sind amtlich belegt oder vom Verband bestätigt.')+'</p>';
+  app.innerHTML=h;
+  document.getElementById('allbtn').onclick=function(){startLearn(-1,false);renderLearn()};
+  document.getElementById('wrongbtn').onclick=function(){startLearn(-1,true);renderLearn()};
+  Array.prototype.forEach.call(app.querySelectorAll('.catbtn'),function(b){b.onclick=function(){startLearn(+b.dataset.cat,false);renderLearn()}});
+}
+function startLearn(cat,onlyWrong){
+  var qs=cat<0?FRAGEN:catQuestions(cat);
+  if(onlyWrong)qs=qs.filter(function(q){var s=stats[q.id];return s&&s.last==='bad'});
+  // Noch nicht gelernte Fragen zuerst, dann der Rest
+  var open=shuffle(qs.filter(function(q){return !mastered(q)})),done=shuffle(qs.filter(mastered));
+  learn={cat:cat,onlyWrong:onlyWrong,ids:open.concat(done).map(function(q){return q.id}),i:0,order:null,picked:null,ok:0,bad:0};
+}
+function renderLearn(){
+  if(!learn){renderLearnMenu();return}
+  var title=learn.onlyWrong?'Fehler wiederholen':learn.cat<0?'Alle Sachgebiete':KATEGORIEN[learn.cat].name;
+  var back=function(){learn=null;renderLearnMenu()};
+  if(learn.i>=learn.ids.length){
+    setHeader(title,back);
+    var n=learn.ok+learn.bad;
+    app.innerHTML='<section class="card verdict '+(n&&learn.ok/n>=.75?'pass':'')+'"><div class="eyebrow">Runde beendet</div><div class="big" style="margin:10px 0">'+learn.ok+'/'+n+'</div><p class="muted">richtig beantwortet'+(learn.bad?', '+learn.bad+' zum Wiederholen':'')+'</p></section>'
+      +'<div class="stack"><button class="btn primary block" id="again">Noch eine Runde</button>'+(learn.bad?'<button class="btn block" id="onlywrong">Nur die Fehler dieser Runde</button>':'')+'<a class="btn block" href="#lernen" id="menu">Zur Auswahl</a></div>';
+    var cat=learn.cat,ow=learn.onlyWrong,wrongIds=learn.wrongIds||[];
+    document.getElementById('again').onclick=function(){startLearn(cat,ow);renderLearn()};
+    var o=document.getElementById('onlywrong');if(o)o.onclick=function(){learn={cat:cat,onlyWrong:true,ids:shuffle(wrongIds),i:0,order:null,picked:null,ok:0,bad:0};renderLearn()};
+    document.getElementById('menu').onclick=function(e){e.preventDefault();back()};
+    return;
+  }
+  var q=FRAGEN[learn.ids[learn.i]];
+  if(!learn.order)learn.order=shuffle([0,1,2]);
+  setHeader(title,back,'<span class="pill">'+(learn.i+1)+' / '+learn.ids.length+'</span>');
+  var letters=['A','B','C'];
+  var h='<div class="progress"><i style="width:'+Math.round(learn.i/learn.ids.length*100)+'%"></i></div>'
+    +'<section class="card stack"><div class="eyebrow" style="color:'+KATEGORIEN[q.c].farbe+'">'+esc(KATEGORIEN[q.c].name)+'</div><h2 class="question">'+esc(q.q)+'</h2>'+img(q)
+    +'<div class="answers">'+learn.order.map(function(ai,k){
+      var cls='ans';
+      if(learn.picked!==null){if(ai===0)cls+=' right';else if(ai===learn.picked)cls+=' wrong'}
+      return '<button class="'+cls+'" data-a="'+ai+'" '+(learn.picked!==null?'disabled':'')+'><span class="letter">'+letters[k]+'</span><span>'+esc(q.a[ai])+'</span></button>'}).join('')+'</div>'
+    +(learn.picked!==null?'<div class="feedback '+(learn.picked===0?'ok':'bad')+'"><b>'+(learn.picked===0?'Richtig!':'Leider falsch.')+'</b> '+esc(q.e||(learn.picked===0?'':'Richtig wäre: '+q.a[0]))+srcNote(q)+'</div><button class="btn primary block" id="next">'+(learn.i+1<learn.ids.length?'Nächste Frage':'Auswertung')+'</button>':'')
+    +'</section>';
+  app.innerHTML=h;
+  if(learn.picked===null){
+    Array.prototype.forEach.call(app.querySelectorAll('.ans'),function(b){b.onclick=function(){
+      var a=+b.dataset.a;learn.picked=a;recordAnswer(q.id,a===0);
+      if(a===0)learn.ok++;else{learn.bad++;(learn.wrongIds=learn.wrongIds||[]).push(q.id)}
+      renderLearn();
+    }});
+  }else{
+    document.getElementById('next').onclick=function(){learn.i++;learn.order=null;learn.picked=null;renderLearn();window.scrollTo(0,0)};
+  }
+}
+
+/* ─────────── Prüfung ─────────── */
+function newExam(){
+  var ids=[];
+  KATEGORIEN.forEach(function(k,i){ids=ids.concat(shuffle(catQuestions(i)).slice(0,EXAM_N_PER_CAT).map(function(q){return q.id}))});
+  ids=shuffle(ids);
+  exam={ids:ids,orders:ids.map(function(){return shuffle([0,1,2])}),answers:{},start:Date.now(),i:0,done:false};
+  save('ap_exam',exam);
+}
+function examRemaining(){return Math.max(0,EXAM_MINUTES*60*1000-(Date.now()-exam.start))}
+function evalExam(){
+  var perCat=KATEGORIEN.map(function(){return{ok:0,n:0}}),score=0;
+  exam.ids.forEach(function(id,i){var q=FRAGEN[id];perCat[q.c].n++;if(exam.answers[i]===0){perCat[q.c].ok++;score++}});
+  var passed=score>=EXAM_MIN_TOTAL&&perCat.every(function(p){return p.ok>=EXAM_MIN_CAT});
+  return{score:score,total:exam.ids.length,perCat:perCat,passed:passed};
+}
+function finishExam(){
+  stopTimer();
+  exam.ids.forEach(function(id,i){recordAnswer(id,exam.answers[i]===0)});
+  var r=evalExam();
+  exam.done=true;exam.result=r;exam.finished=Date.now();
+  exams.push({date:Date.now(),score:r.score,total:r.total,passed:r.passed,perCat:r.perCat.map(function(p){return p.ok})});
+  save('ap_exams',exams);save('ap_exam',exam);
+  renderExam();window.scrollTo(0,0);
+}
+function renderExam(){
+  setTab('pruefung');
+  if(!exam){
+    setHeader('Probeprüfung');
+    app.innerHTML='<section class="card stack"><div><div class="eyebrow">So läuft die Prüfung</div><h2 style="font-size:1.3rem;margin-top:4px">'+(EXAM_N_PER_CAT*KATEGORIEN.length)+' Fragen, '+EXAM_MINUTES+' Minuten</h2></div>'
+      +'<ul class="small" style="margin:0;padding-left:20px;line-height:1.7"><li>'+EXAM_N_PER_CAT+' Fragen aus jedem der '+KATEGORIEN.length+' Sachgebiete des amtlichen Katalogs, zufällig gemischt</li><li>Je Frage eine richtige von drei Antworten</li><li>Bestanden mit mindestens '+EXAM_MIN_TOTAL+' richtigen Antworten und mindestens '+EXAM_MIN_CAT+' richtigen pro Sachgebiet</li><li>Die Lösungen siehst du erst nach der Abgabe</li><li>Du kannst zwischen den Fragen frei springen; der Stand wird auf diesem Gerät gespeichert</li></ul>'
+      +'<p class="note">Nach der Prüfungsordnung des Anglerverbands Schleswig-Holstein (Stand Oktober 2025): 60 Fragen aus sechs Sachgebieten, höchstens 90 Minuten. Die Verteilung der Fragen auf die Abschnitte des neuen Katalogs bitte mit dem Verband abstimmen.</p>'
+      +'<button class="btn primary block" id="start">Prüfung starten</button></section>'
+      +(exams.length?'<section class="card flat"><div class="eyebrow">Bisherige Versuche</div><table style="margin-top:8px"><tr><th>Datum</th><th class="r">Punkte</th><th class="r">Ergebnis</th></tr>'+exams.slice().reverse().slice(0,8).map(function(e){return '<tr><td>'+fmtDate(e.date)+'</td><td class="r">'+e.score+'/'+e.total+'</td><td class="r" style="color:'+(e.passed?'var(--ok)':'var(--bad)')+';font-weight:700">'+(e.passed?'bestanden':'nicht bestanden')+'</td></tr>'}).join('')+'</table></section>':'');
+    document.getElementById('start').onclick=function(){newExam();renderExam()};
+    return;
+  }
+  if(exam.done){renderExamResult();return}
+  if(examRemaining()<=0){finishExam();return}
+  var i=exam.i,q=FRAGEN[exam.ids[i]],order=exam.orders[i],letters=['A','B','C'];
+  var answered=Object.keys(exam.answers).length;
+  setHeader('Frage '+(i+1)+' von '+exam.ids.length,null,'<span class="pill timer" id="timer"></span>');
+  var h='<div class="progress"><i style="width:'+Math.round(answered/exam.ids.length*100)+'%"></i></div>'
+    +'<section class="card stack"><div class="eyebrow" style="color:'+KATEGORIEN[q.c].farbe+'">'+esc(KATEGORIEN[q.c].name)+'</div><h2 class="question">'+esc(q.q)+'</h2>'+img(q)
+    +'<div class="answers">'+order.map(function(ai,k){return '<button class="ans'+(exam.answers[i]===ai?' selected':'')+'" data-a="'+ai+'"><span class="letter">'+letters[k]+'</span><span>'+esc(q.a[ai])+'</span></button>'}).join('')+'</div>'
+    +'<div class="row"><button class="btn grow" id="prev" '+(i===0?'disabled':'')+'>Zurück</button><button class="btn primary grow" id="next" '+(i===exam.ids.length-1?'disabled':'')+'>Weiter</button></div></section>'
+    +'<section class="card flat stack"><div class="row"><span class="eyebrow grow">Übersicht · '+answered+' von '+exam.ids.length+' beantwortet</span></div><div class="grid">'+exam.ids.map(function(id,k){return '<button data-j="'+k+'" class="'+(exam.answers[k]!==undefined?'done':'')+(k===i?' cur':'')+'">'+(k+1)+'</button>'}).join('')+'</div>'
+    +'<div id="submitbox"><button class="btn block" id="submit">Prüfung abgeben</button></div>'
+    +'<button class="btn block danger" id="abort">Prüfung abbrechen</button></section>';
+  app.innerHTML=h;
+  function tick(){var el=document.getElementById('timer');if(!el){stopTimer();return}var ms=examRemaining();if(ms<=0){finishExam();return}var s=Math.floor(ms/1000);el.textContent=pad(Math.floor(s/60))+':'+pad(s%60);el.classList.toggle('warn',s<300)}
+  stopTimer();tick();timerId=setInterval(tick,1000);
+  Array.prototype.forEach.call(app.querySelectorAll('.ans'),function(b){b.onclick=function(){exam.answers[i]=+b.dataset.a;save('ap_exam',exam);
+    Array.prototype.forEach.call(app.querySelectorAll('.ans'),function(x){x.classList.toggle('selected',x===b)});
+    var g=app.querySelector('.grid button[data-j="'+i+'"]');if(g)g.classList.add('done');
+    setTimeout(function(){if(i<exam.ids.length-1){exam.i=i+1;save('ap_exam',exam);renderExam();window.scrollTo(0,0)}else renderExam()},250)}});
+  document.getElementById('prev').onclick=function(){exam.i=i-1;save('ap_exam',exam);renderExam();window.scrollTo(0,0)};
+  document.getElementById('next').onclick=function(){exam.i=i+1;save('ap_exam',exam);renderExam();window.scrollTo(0,0)};
+  Array.prototype.forEach.call(app.querySelectorAll('.grid button'),function(b){b.onclick=function(){exam.i=+b.dataset.j;save('ap_exam',exam);renderExam();window.scrollTo(0,0)}});
+  document.getElementById('submit').onclick=function(){
+    var open=exam.ids.length-Object.keys(exam.answers).length;
+    document.getElementById('submitbox').innerHTML='<div class="feedback stack"><b>Jetzt abgeben?</b>'+(open?'<span class="small">'+open+' Frage'+(open===1?' ist':'n sind')+' noch unbeantwortet und zählen als falsch.</span>':'')+'<div class="row"><button class="btn grow" id="cancel">Weiter prüfen</button><button class="btn primary grow" id="confirm">Abgeben</button></div></div>';
+    document.getElementById('cancel').onclick=renderExam;document.getElementById('confirm').onclick=finishExam;
+  };
+  document.getElementById('abort').onclick=function(){
+    var box=document.getElementById('abort');
+    box.outerHTML='<div class="feedback bad stack" id="abortbox"><b>Prüfung wirklich abbrechen?</b><span class="small">Die bisherigen Antworten gehen verloren und zählen nicht.</span><div class="row"><button class="btn grow" id="cancel2">Nein</button><button class="btn danger grow" id="confirm2">Ja, abbrechen</button></div></div>';
+    document.getElementById('cancel2').onclick=renderExam;
+    document.getElementById('confirm2').onclick=function(){stopTimer();exam=null;del('ap_exam');renderExam()};
+  };
+}
+function renderExamResult(){
+  var r=exam.result;
+  setHeader('Ergebnis');
+  var h='<section class="card verdict '+(r.passed?'pass':'fail')+'"><div class="eyebrow">'+(r.passed?'Bestanden':'Nicht bestanden')+'</div><div class="big" style="margin:10px 0">'+r.score+'<span class="muted" style="font-size:1.4rem"> / '+r.total+'</span></div><p class="small muted">Nötig: mindestens '+EXAM_MIN_TOTAL+' richtig und je Sachgebiet mindestens '+EXAM_MIN_CAT+'</p></section>';
+  h+='<section class="card stack"><div class="eyebrow">Nach Sachgebiet</div><div class="bars">'+KATEGORIEN.map(function(k,i){var p=r.perCat[i],ok=p.ok>=EXAM_MIN_CAT;return '<div class="barrow"><span>'+esc(k.name)+'</span><span class="n" style="color:'+(ok?'var(--ok)':'var(--bad)')+'">'+p.ok+'/'+p.n+'</span><span class="track"><i style="width:'+Math.round(p.ok/p.n*100)+'%;background:'+(ok?k.farbe:'var(--bad)')+'"></i></span></div>'}).join('')+'</div></section>';
+  var wrong=exam.ids.map(function(id,i){return{q:FRAGEN[id],a:exam.answers[i],i:i}}).filter(function(x){return x.a!==0});
+  h+='<div class="row"><button class="btn primary grow" id="newexam">Neue Prüfung</button>'+(wrong.length?'<button class="btn grow" id="practice">Fehler üben ('+wrong.length+')</button>':'')+'</div>';
+  if(wrong.length){
+    h+='<section class="card stack"><div class="eyebrow">Deine Fehler</div>'+wrong.map(function(x){return '<div class="review"><div class="small muted">Frage '+(x.i+1)+' · '+esc(KATEGORIEN[x.q.c].kurz)+' · Katalog-Nr. '+x.q.nr+'</div><p style="font-weight:600;margin:4px 0 8px">'+esc(x.q.q)+'</p>'+img(x.q)+(x.a===undefined?'<p class="small" style="color:var(--bad)">Nicht beantwortet</p>':'<p class="small" style="color:var(--bad)">Deine Antwort: '+esc(x.q.a[x.a])+'</p>')+'<p class="small" style="color:var(--ok);font-weight:700">Richtig: '+esc(x.q.a[0])+'</p>'+(x.q.e?'<p class="small muted" style="margin-top:4px">'+esc(x.q.e)+'</p>':'')+'</div>'}).join('')+'</section>';
+  }
+  app.innerHTML=h;
+  var wrongIds=wrong.map(function(x){return x.q.id});
+  document.getElementById('newexam').onclick=function(){exam=null;del('ap_exam');renderExam();window.scrollTo(0,0)};
+  var p=document.getElementById('practice');if(p)p.onclick=function(){exam=null;del('ap_exam');learn={cat:-1,onlyWrong:true,ids:shuffle(wrongIds),i:0,order:null,picked:null,ok:0,bad:0};go('lernen')};
+}
+
+/* ─────────── Fische ─────────── */
+function renderFish(){
+  setHeader('Fischkartei');
+  var h='<p class="note">Steckbriefe der häufigsten Prüfungsfische. Maße und Schonzeiten sind Beispielwerte; verbindlich sind die Binnen- und die Küstenfischereiverordnung Schleswig-Holstein.</p><div class="stack">'
+    +FISCHE.map(function(f){return '<details class="fish"><summary><span>'+esc(f.n)+'<br><span class="lat">'+esc(f.lat)+'</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><dl><dt>Familie</dt><dd>'+esc(f.fam)+'</dd><dt>Merkmale</dt><dd>'+esc(f.merk)+'</dd><dt>Lebensraum</dt><dd>'+esc(f.leb)+'</dd><dt>Laichzeit</dt><dd>'+esc(f.laich)+'</dd><dt>Nahrung</dt><dd>'+esc(f.nahr)+'</dd><dt>Schonmaß</dt><dd>'+esc(f.mass)+'</dd><dt>Schonzeit</dt><dd>'+esc(f.schon)+'</dd></dl></details>'}).join('')+'</div>';
+  app.innerHTML=h;
+}
+
+/* ─────────── Statistik ─────────── */
+function renderStats(){
+  setHeader('Statistik');
+  var ok=0,bad=0;Object.keys(stats).forEach(function(k){ok+=stats[k].ok;bad+=stats[k].bad});
+  var t=totalMastery(),passed=exams.filter(function(e){return e.passed}).length;
+  var h='<div class="stat"><div class="card"><div class="v">'+Math.round(t.p*100)+'%</div><div class="l">gelernt</div></div><div class="card"><div class="v">'+(ok+bad?Math.round(ok/(ok+bad)*100):0)+'%</div><div class="l">Trefferquote</div></div><div class="card"><div class="v">'+passed+'/'+exams.length+'</div><div class="l">Prüfungen bestanden</div></div></div>';
+  h+='<section class="card stack"><div class="eyebrow">Sachgebiete</div><table><tr><th>Gebiet</th><th class="r">Gelernt</th><th class="r">Quote</th></tr>'+KATEGORIEN.map(function(k,i){var m=catMastery(i),o=0,b=0;catQuestions(i).forEach(function(q){var s=stats[q.id];if(s){o+=s.ok;b+=s.bad}});return '<tr><td>'+esc(k.name)+'</td><td class="r">'+m.m+'/'+m.n+'</td><td class="r">'+(o+b?Math.round(o/(o+b)*100)+'%':'–')+'</td></tr>'}).join('')+'</table></section>';
+  var hard=FRAGEN.filter(function(q){var s=stats[q.id];return s&&s.bad>0}).sort(function(a,b){return stats[b.id].bad-stats[a.id].bad}).slice(0,5);
+  if(hard.length)h+='<section class="card stack"><div class="eyebrow">Häufigste Fehler</div>'+hard.map(function(q){return '<div class="review"><p style="font-weight:600">'+esc(q.q)+'</p>'+img(q)+'<p class="small" style="color:var(--ok);margin-top:4px">'+esc(q.a[0])+'</p><p class="small muted">'+stats[q.id].bad+'× falsch, '+stats[q.id].ok+'× richtig</p></div>'}).join('')+'</section>';
+  h+='<div id="resetbox"><button class="btn block danger" id="reset">Lernstand zurücksetzen</button></div>';
+  app.innerHTML=h;
+  document.getElementById('reset').onclick=function(){
+    document.getElementById('resetbox').innerHTML='<div class="feedback bad stack"><b>Alles zurücksetzen?</b><span class="small">Lernstand und Prüfungsverlauf auf diesem Gerät werden gelöscht.</span><div class="row"><button class="btn grow" id="rc">Abbrechen</button><button class="btn danger grow" id="rok">Ja, löschen</button></div></div>';
+    document.getElementById('rc').onclick=renderStats;
+    document.getElementById('rok').onclick=function(){stats={};exams=[];exam=null;del('ap_stats');del('ap_exams');del('ap_exam');renderStats()};
+  };
+}
+
+/* ─────────── Routing ─────────── */
+function route(r){
+  r=r||(location.hash||'#start').slice(1);
+  if(['start','lernen','pruefung','fische','statistik'].indexOf(r)<0)r='start';
+  if(r!=='pruefung')stopTimer();
+  setTab(r);
+  if(r==='start')renderHome();
+  else if(r==='lernen')renderLearn();
+  else if(r==='pruefung')renderExam();
+  else if(r==='fische')renderFish();
+  else renderStats();
+  window.scrollTo(0,0);
+}
+function go(r){try{if(location.hash!=='#'+r)location.hash='#'+r}catch(e){}route(r)}
+app.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href^="#"]');if(a){e.preventDefault();go(a.getAttribute('href').slice(1))}});
+Array.prototype.forEach.call(document.querySelectorAll('#tabs a'),function(a){a.onclick=function(e){e.preventDefault();go(a.dataset.r)}});
+window.addEventListener('hashchange',function(){route()});
+route();
+})();
+</script>
